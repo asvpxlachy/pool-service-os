@@ -6,7 +6,20 @@ type Client={id:number;name:string;phone:string;address:string;suburb:string;not
 type Job={id:number;clientId:number;time:string;done:boolean;tasks:string[];readings:Record<string,string>;notes:string[];activity:string[]};
 const pool=(volume:string,surface:string,chlorinator:string):Pool=>({volume,surface,system:'Saltwater',chlorinator,filter:'Sand filter',pump:'Variable-speed pump',fcMin:'2',fcMax:'4',phMin:'7.2',phMax:'7.8'});
 const initialClients:Client[]=[{id:1,name:'Sarah Mitchell',phone:'0400 000 001',address:'Example Road, Ellenbrook WA',suburb:'Ellenbrook',note:'Close side gate. Dog in backyard.',pool:pool('42000','Fibreglass','AstralPool Viron')},{id:2,name:'James Cooper',phone:'0400 000 002',address:'Example Street, Aveley WA',suburb:'Aveley',note:'Use left-hand side gate. Dog in backyard.',pool:pool('55000','Concrete','Zodiac')},{id:3,name:'Emma Wilson',phone:'0400 000 003',address:'Example Lane, The Vines WA',suburb:'The Vines',note:'Text before arrival.',pool:pool('35000','Fibreglass','Davey')},{id:4,name:'Michael Brown',phone:'0400 000 004',address:'Example Court, Henley Brook WA',suburb:'Henley Brook',note:'Check cleaner hose.',pool:pool('48000','Concrete','AstralPool')},{id:5,name:'Olivia Taylor',phone:'0400 000 005',address:'Example Drive, Brabham WA',suburb:'Brabham',note:'Keep gate latched.',pool:pool('30000','Fibreglass','Zodiac')}];
-const initialJobs:Job[]=initialClients.map((c,i)=>({id:i+1,clientId:c.id,time:['8:30','9:30','10:30','11:45','13:00'][i],done:i===0,tasks:i===0?['Skim surface','Empty skimmer basket','Brush walls and steps','Test water']:[],readings:i===0?{fc:'3.2',ph:'7.5',ta:'90'}:{},notes:[],activity:i===0?['Service marked complete']:[]}));
+const initialJobs: Job[] = initialClients.map((c, i): Job => ({
+  id: i + 1,
+  clientId: c.id,
+  time: ['8:30', '9:30', '10:30', '11:45', '13:00'][i],
+  done: i === 0,
+  tasks: i === 0
+    ? ['Skim surface', 'Empty skimmer basket', 'Brush walls and steps', 'Test water']
+    : [],
+  readings: i === 0
+    ? { fc: '3.2', ph: '7.5', ta: '90' }
+    : {},
+  notes: [],
+  activity: i === 0 ? ['Service marked complete'] : []
+}));
 const checklist=['Skim surface','Empty skimmer basket','Empty pump basket','Brush walls and steps','Inspect equipment','Test water'];
 const fields:[keyof Pool,string][]=[['volume','Pool volume (litres)'],['surface','Surface type'],['system','Sanitisation system'],['chlorinator','Chlorinator'],['filter','Filter'],['pump','Pump']];
 const chemFields:[string,string][]=[['fc','Free chlorine (ppm)'],['ph','pH'],['ta','Total alkalinity (ppm)'],['cya','Stabiliser (ppm)'],['ch','Calcium hardness (ppm)'],['salt','Salt (ppm)']];
