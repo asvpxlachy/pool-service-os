@@ -9,6 +9,12 @@
 - Use synthetic data only. Never introduce real customer data, expose credentials, or commit environment files or browser records.
 
 ## Daily workflow
+Owner communication must be plain English, short and about what changes in the app. Do not require the owner to read code, GitHub or technical reports. Keep technical evidence in the report appendix.
+- At the start, state "Today's plan" in one or two sentences describing the approved work and its benefit. If work is unapproved, ask "Shall I work on this? Yes / No" and do not implement until approved. Approval to prepare work is distinct from approval to release it.
+- At the end, state "What I finished", "Checks" (passed/failed and any untested areas in ordinary language), and "Your decision". Show a screenshot or preview when useful for visible changes.
+- Ask "Make these changes live in the app? Yes / No" only when specific app changes are complete, checked and ready to release. Name exactly which changes the question covers and retain the exact branch/commit in the technical appendix. If nothing affects the app, say "Nothing to make live today." If checks failed, say "Not ready to go live" and explain why simply.
+- A clear Yes in reply to that specific release question authorizes merging and production deployment of only those reviewed changes. Handle the technical steps for the owner, verify the released app and report success or failure. Do not ask again for the same authorization unless the changes or material risks change. A No or no reply means leave the live app unchanged. Never interpret approval of a plan, this reporting workflow, or an ambiguous Yes as release permission.
+
 1. Read this file, DEVELOPMENT_BACKLOG.md and recent development reports in the canonical project directory. Inspect git status, branches/worktrees and recent commits.
 2. Select one small approved Ready task. If none exists, perform a read-only code quality review and report proposals; do not change application code. Reports are permitted even in read-only review mode.
 3. Use an isolated codex/<task> feature branch/worktree. Do not alter an occupied checkout or include unrelated dirty files. Do not repeat a task already awaiting review. Until setup is merged with approval, read these instructions from the canonical checkout and use its committed setup branch as the workflow baseline; never silently lose these instructions by starting from main.

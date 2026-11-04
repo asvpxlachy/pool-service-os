@@ -9,6 +9,7 @@ No approved implementation tasks remain. Daily runs should perform read-only rev
 None.
 
 ## Awaiting review
+- REPORT-01: Plain-English daily plan, completion summary and Yes/No release decision. Approved by the owner's follow-up request on 2026-11-04. Reporting instructions and daily automation updated; this changes the development workflow only, not the live application.
 - SETUP-01: Autonomous development instructions, backlog, report template and native weekday schedule. Approved by owner in 2026-11-04 setup request. Acceptance: baseline checks recorded, protected workflow documented, automation active, report accessible. Branch: codex/autonomous-development-setup.
 - TEST-01: Documentation-only regression checklist for existing mobile visit workflow. Approved by the same request (Phase 5). Acceptance: checklist covers protected functionality; no runtime changes; tests and build pass; first report generated.
 
