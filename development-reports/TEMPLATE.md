@@ -12,11 +12,15 @@ Passed / Not passed. Explain what was checked and any important untested areas w
 ## Your decision
 For ready app changes only: "Make these changes live in the app? Yes / No" followed by the exact changes covered.
 Otherwise: "Nothing to make live today" or "Not ready to go live" with a simple reason.
-If a new task needs approval, separately ask "Shall I work on [specific task]? Yes / No". This does not authorize release.
+Choosing tomorrow's work is separate from approving today's release.
+
+## Choose tomorrow's direction
+Provide exactly three numbered choices, each with a plain-English benefit and a specific first step achievable within the 15-minute session. Mark one recommended. Ask "Which direction would you like: 1, 2 or 3?" Selection approves that first step only, not going live. Record these dated options in the backlog.
 
 ## Technical details (optional reading)
 
 - Date and time: YYYY-MM-DD HH:mm Australia/Perth (UTC+08:00)
+- Time used: start, deadline, finish and elapsed minutes; explain any overrun
 - Task selected: ID, scope and approval source, or read-only review
 - Work completed:
 - Files changed:
