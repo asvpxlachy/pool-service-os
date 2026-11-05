@@ -9,9 +9,15 @@ None.
 None.
 
 ## Awaiting review
+- NAV-01: Owner approved proposal 1 in chat 2026-11-05 "yes make changes live proceed with changes 1 2 and 3". First step: current route hold-to-drag handle, retain arrows/keyboard fallback, verify order persists after reload; no new calendar/optimisation. Acceptance: hold/deliberate drop, cancelled motion not reorder, persisted IDs/data unchanged except order, phone browser + tests/build.
+- NAV-02: Same approval, proposal 2. First step: Today↔Clients swipes only, preserve tabs; ignore forms/overlays and distinguish vertical scroll, prevent accidental activation. Acceptance: deliberate two directions work; input/vertical/overlay gestures do not navigate; tests/build.
+- NAV-03: Same approval, proposal 3. First step: read-only overview sheet of saved contact/access/pool fields and explicit Edit action; no initial appointment/status, no new schema/history. Acceptance: open/close/Edit/save/reload in phone browser, preserve job editing/contact actions/storage protection; tests/build. UI-01 exact reviewed release explicitly authorized separately by the same message.
+Started12:43; implement approved first steps only.
+NAV-01/02/03 checked: 16 tests/build and 320px CDP touch/browser checks passed; awaiting exact release Yes/No for the new result. See 2026-11-05-1242 report.
+
 - UI-01 — Small mobile layout/navigation polish. Ready approval: owner's 2026-11-05 request to review layout and "make changes to small sensible items", explicitly separating Today jobs from customer profiles and using overlays where appropriate. Exact scope: customer-only directory cards with no appointment times/completion state, opening the existing profile editor; reuse existing Sheet for that editor while preserving every field/save/cancel/photo action; remove only the empty photo placeholder; add Back to Today on active visits and reset scroll on main navigation; increase the two previously measured small service targets to 44px. Fix unrelated-visit activity logging when a profile is edited from directory by associating profile activity only with that customer's jobs. No new records/schema, redesign, gesture implementation or dependency changes. Acceptance: tests/build, mobile browser checks for directory versus Today, editor save/cancel/Escape/focus/reload, job navigation and contact links, no overflow, no unrelated job change, storage guard retained. Major long-press reorder, cross-screen swipes and broader profile/navigation design remain proposals requiring owner yes/no. Plan approval is not production release permission.
 Started 2026-11-05 12:30. Ready approval recorded before work.
-Status: UI-01 checked, 16 tests/build and Chrome phone scenarios passed; proposed small app changes awaiting exact owner release Yes/No. Major gestures remain unapproved.
+Status: UI-01 checked, 16 tests/build and Chrome phone scenarios passed. Commit b403f5f3f716dcc33c7dca8741416836d1c884a9; draft PR #4 https://github.com/asvpxlachy/pool-service-os/pull/4; Vercel preview dpl_Hx97PNEKBsHcqyo3JGhj99vHTPVR READY. Proposed small app changes await exact owner release Yes/No; main/live unchanged. Major gestures/profile overview remain unapproved.
 
 - MOBILE-01A: Owner-selected step 2 completed after TEST-02B passed. Isolated Chrome 320x568 review exercised client editing/reload, correct Call/Maps link targets and service/bottom navigation with synthetic data. No overflow or console errors in exercised screens. Three usability proposals recorded in the 2026-11-05-1214 report; no fixes or redesign. Awaiting owner acceptance of findings.
 
@@ -19,6 +25,8 @@ Status: UI-01 checked, 16 tests/build and Chrome phone scenarios passed; propose
 
 
 ## Completed
+- UI-01 accepted/released 2026-11-05 by explicit owner Yes: PR #4 merged main a8df88d3c619d1b425084d0723384734b365b581; Vercel dpl_Gv7AtGCB6C1H2igT5QHnmdzJyhyW READY exactSHA, production alias pool-service-os.vercel.app, HTTP200. Supersedes earlier Awaiting review text for UI-01.
+
 - TEST-02A — More reliable saved job details. **Approved for Thursday 5 November 2026 at 08:00 Australia/Perth.** Approval source: owner replied "1" to the three proposed directions on 2026-11-04. Scope: add focused tests using existing tools and synthetic data to verify duplicate customer/job IDs are rejected and a valid saved visit retains notes/readings when serialized and read back. Test-only changes; no runtime fixes, new dependencies or live release. Acceptance: meaningful new tests, npm test and npm run build pass, plain-English report plus three next-day choices. Maximum 15 minutes including checks/report; wrap up at 12 minutes. Report discovered bugs or unfinished checks rather than extending scope. Broader TEST-02 work remains unapproved. Status 2026-11-05: Awaiting review. Added three focused tests; all 13 tests and production build passed on Node v24.14.0. Runtime unchanged. Branch: codex/saved-record-tests-2026-11-05. Production setting resolved by owner confirmation on 2026-11-05: branch tracking main; domain pool-service-os.vercel.app. Superseding owner authorization 2026-11-05: owner explicitly requested GitHub push/commit/merge and Vercel live release of completed agent changes, without external manual approval. Release in progress; no unrelated proposals approved. See development-reports/2026-11-05-1208-release-verification.md.
 - LIMIT-01: Owner authorized a 15-minute daily working limit and three proposed next-day directions on 2026-11-04. Instructions, report template and scheduled prompt updated. No application change or release authorized.
 - REPORT-01: Plain-English daily plan, completion summary and Yes/No release decision. Approved by the owner's follow-up request on 2026-11-04. Reporting instructions and daily automation updated; this changes the development workflow only, not the live application.
@@ -69,3 +77,10 @@ These supersede the previous small-touch-target choices, now covered by owner-ap
 3. **Read-only customer overview** — Browse without editing immediately. First step: overview sheet of existing saved contact/access/pool details with an Edit action; no appointments/status initially, new storage fields or history system.
 
 Reply Yes / No for each (1, 2 and 3). Which direction would you like first: 1, 2 or 3? Selection approves only the stated first step, not release.
+## Choices for Friday 6 November 2026 — report 2026-11-05 12:42
+Earlier major proposals 1/2/3 explicitly selected and their first steps completed; do not repeat them. The new result awaits release decision. These follow-ons remain unapproved proposals, not Ready:
+1. **Long-route drag scrolling (recommended)** — Reach off-screen jobs. First step: bounded edge autoscroll during active held drag only, verify cancel/record preservation in phone browser, tests/build.
+2. **More compact Schedule introduction** — Show more jobs. First step: consolidate route guidance into one short instruction, retain hold hint/arrows, check320/touch targets, tests/build.
+3. **Pool targets in the overview** — Read existing targets without editing. First step: read-only saved chlorine/pH ranges in overview; no dosing/schema changes; verify values, tests/build.
+
+Which direction would you like: 1, 2 or 3? Selection approves only that first step, not release.
