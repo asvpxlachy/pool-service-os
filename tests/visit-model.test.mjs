@@ -60,6 +60,36 @@ test('checkout requires check-in, captures notes and is idempotent',()=>{
   assert.equal(result.done,true);assert.equal(result.invoice.serviceFeeCents,12000);assert.deepEqual(result.invoice.notes,['Equipment checked']);assert.equal(result.noteDraft,'');
   assert.equal(checkout(result,client,'2026-11-03T02:00:00Z'),result);
 });
+test('checkout retains saved notes and appends one trimmed draft to the visit and invoice',()=>{
+  const source={...job,checkedInAt:'2026-11-03T00:00:00Z',notes:['Gate checked','Filter cleaned'],noteDraft:'  Equipment inspected\nPressure normal  '};
+  const result=checkout(source,client,'2026-11-03T01:00:00Z');
+  const expected=['Gate checked','Filter cleaned','Equipment inspected\nPressure normal'];
+  assert.deepEqual(result.notes,expected);
+  assert.deepEqual(result.invoice.notes,expected);
+  assert.equal(result.noteDraft,'');
+  assert.deepEqual(source.notes,['Gate checked','Filter cleaned']);
+  assert.equal(source.noteDraft,'  Equipment inspected\nPressure normal  ');
+  result.notes.push('Later synthetic note');
+  assert.deepEqual(result.invoice.notes,expected);
+});
+test('checkout does not add an empty note for a whitespace-only draft',()=>{
+  const result=checkout({...job,checkedInAt:'2026-11-03T00:00:00Z',notes:['Keep saved note'],noteDraft:' \n\t '},client,'2026-11-03T01:00:00Z');
+  assert.deepEqual(result.notes,['Keep saved note']);
+  assert.deepEqual(result.invoice.notes,['Keep saved note']);
+  assert.equal(result.noteDraft,'');
+});
+test('repeated checkout after save and reload preserves the original invoice and completion time',()=>{
+  const completed=checkout({...job,checkedInAt:'2026-11-03T00:00:00Z',notes:['Saved note'],noteDraft:'  Finished  ',chemicals:[chemical]},client,'2026-11-03T01:00:00Z');
+  const saved={version:2,clients:[client],jobs:[completed],products:[]};
+  const loaded=readSavedData(JSON.stringify(saved)).jobs[0];
+  const original=JSON.parse(JSON.stringify(loaded));
+  const result=checkout(loaded,{...client,name:'Changed synthetic customer',serviceFeeCents:99999},'2026-11-03T02:00:00Z');
+  assert.deepEqual(result,original);
+  assert.deepEqual(result.invoice,completed.invoice);
+  assert.deepEqual(result.notes,['Saved note','Finished']);
+  assert.equal(result.checkedOutAt,'2026-11-03T01:00:00Z');
+  assert.equal(result.activity.length,1);
+});
 test('invoice snapshot does not change when source readings, profile or lines change',()=>{
   const source={...job,readings:{...job.readings},tasks:['Test water'],checkedInAt:'2026-11-03T00:00:00Z',chemicals:[{...chemical}]};
   const customer={...client};const result=checkout(source,customer,'2026-11-03T01:00:00Z');
