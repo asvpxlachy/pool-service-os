@@ -13,6 +13,28 @@ test('old browser records load without dropping readings or existing notes',()=>
 test('empty, malformed and orphaned records are rejected before saving',()=>{
   for(const value of ['{','{}',JSON.stringify({clients:[],jobs:[]}),JSON.stringify({clients:[client],jobs:[{...job,clientId:9}]}),JSON.stringify({clients:[client],jobs:[{...job,notes:3}]}),JSON.stringify({clients:[client],jobs:[{...job,checkedInAt:'invalid'}]})])assert.throws(()=>readSavedData(value));
 });
+test('duplicate customer IDs are rejected even when the customer details differ',()=>{
+  const saved={version:2,clients:[client,{...client,name:'Another synthetic customer'}],jobs:[job],products:[]};
+  assert.throws(()=>readSavedData(JSON.stringify(saved)),{message:'Duplicate customer IDs.'});
+  const distinct={...saved,clients:[client,{...saved.clients[1],id:2}]};
+  assert.equal(readSavedData(JSON.stringify(distinct)).clients.length,2);
+});
+test('duplicate job IDs are rejected even when the visits belong to different customers',()=>{
+  const saved={version:2,clients:[client,{...client,id:2}],jobs:[job,{...job,clientId:2,time:'10:00'}],products:[]};
+  assert.throws(()=>readSavedData(JSON.stringify(saved)),{message:'Duplicate visit IDs.'});
+  const distinct={...saved,jobs:[job,{...saved.jobs[1],id:2}]};
+  assert.equal(readSavedData(JSON.stringify(distinct)).jobs.length,2);
+});
+test('version 2 saved visits retain notes and all water readings through save and reload',()=>{
+  const visit={...job,notes:['Gate checked','Filter cleaned\nPressure normal — synthetic note'],noteDraft:'Next visit: recheck',readings:{fc:'0',ph:'7.4',ta:'80',ch:'250',salt:'4000',cya:''}};
+  const saved={version:2,clients:[client],jobs:[visit],products:[]};
+  const loaded=readSavedData(JSON.stringify(saved));
+  assert.deepEqual(loaded.jobs[0].notes,visit.notes);
+  assert.deepEqual(loaded.jobs[0].readings,visit.readings);
+  assert.equal(loaded.jobs[0].noteDraft,visit.noteDraft);
+  assert.deepEqual(loaded,{clients:saved.clients,jobs:saved.jobs,products:saved.products});
+  assert.deepEqual(readSavedData(JSON.stringify({version:2,...loaded})),loaded);
+});
 test('money accepts zero, distinguishes blank and rejects precision loss',()=>{
   assert.equal(parsePrice('120'),12000);assert.equal(parsePrice('0'),0);assert.equal(parsePrice(''),null);assert.equal(parsePrice('4.50'),450);
   for(const price of ['-2','1.001','Infinity','NaN','1e3'])assert.throws(()=>parsePrice(price));
