@@ -1,40 +1,34 @@
 'use client';
-import {useEffect,useRef,useState,type PointerEvent} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState,type PointerEvent} from 'react';
+import {createPortal} from 'react-dom';
 import type {Client,Job} from './visit-model';
-
-type Drag={id:number;pointerId:number;x:number;y:number;active:boolean;over:number;timer:ReturnType<typeof setTimeout>|null};
+type Rect={top:number;left:number;width:number;height:number};
+type Drag={id:number;pointerId:number;x:number;y:number;px:number;py:number;active:boolean;over:number;scroll:number;rects:Map<number,Rect>;timer:ReturnType<typeof setTimeout>|null;settling:boolean};
+const reduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 export default function RouteOrder({jobs,clients,onMove}:{jobs:Job[];clients:Client[];onMove:(id:number,target:number)=>void}){
-  const drag=useRef<Drag|null>(null);
-  const [active,setActive]=useState<number|null>(null),[over,setOver]=useState<number|null>(null),[announcement,setAnnouncement]=useState('');
-  useEffect(()=>()=>{if(drag.current?.timer)clearTimeout(drag.current.timer);},[]);
-  function clear(){if(drag.current?.timer)clearTimeout(drag.current.timer);drag.current=null;setActive(null);setOver(null);}
-  function start(event:PointerEvent<HTMLButtonElement>,id:number){
-    if(!event.isPrimary||event.button!==0)return;
-    clear();
-    const current:Drag={id,pointerId:event.pointerId,x:event.clientX,y:event.clientY,active:false,over:id,timer:null};
-    drag.current=current;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    current.timer=setTimeout(()=>{if(drag.current===current){current.active=true;setActive(id);setOver(id);setAnnouncement('Move over another job, then release to place it.');}},400);
-  }
-  function move(event:PointerEvent<HTMLButtonElement>){
-    const current=drag.current;if(!current||current.pointerId!==event.pointerId)return;
-    if(!current.active){if(Math.hypot(event.clientX-current.x,event.clientY-current.y)>12)clear();return;}
-    event.preventDefault();
-    const row=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-route-id]');
-    if(row){current.over=Number(row.dataset.routeId);setOver(current.over);}
-  }
-  function finish(event:PointerEvent<HTMLButtonElement>){
-    const current=drag.current;if(!current||current.pointerId!==event.pointerId)return;
-    const id=current.id,target=current.over,shouldMove=current.active&&id!==target;
-    clear();
-    if(shouldMove){onMove(id,target);setAnnouncement('Route order updated.');}
-  }
-  return <><p id="route-drag-help" className="muted small">Hold the grip, drag over a job, then release. You can also use the arrow buttons.</p><span className="sr-only" role="status">{announcement}</span>{jobs.map((job,index)=>{
-    const client=clients.find(c=>c.id===job.clientId)!;
-    return <div key={job.id} data-route-id={job.id} className={`card row route-row${active===job.id?' route-lifted':''}${over===job.id&&active!==job.id?' route-drop':''}`}>
-      <button type="button" className="icon-button route-grip" aria-label={`Hold to move ${client.name}`} aria-describedby="route-drag-help" aria-pressed={active===job.id} onContextMenu={event=>event.preventDefault()} onPointerDown={event=>start(event,job.id)} onPointerMove={move} onPointerUp={finish} onPointerCancel={clear} onLostPointerCapture={clear} onKeyDown={event=>{if(event.key==='ArrowUp'&&index>0){event.preventDefault();onMove(job.id,jobs[index-1].id);}if(event.key==='ArrowDown'&&index<jobs.length-1){event.preventDefault();onMove(job.id,jobs[index+1].id);}}}><span aria-hidden="true">⠿</span></button>
-      <b>{index+1}</b><div className="jobmain"><b>{client.name}</b><div className="muted tiny">{client.suburb}</div></div>
-      <div className="route-arrows"><button type="button" className="button small" aria-label={`Move ${client.name} up`} disabled={index===0} onClick={()=>onMove(job.id,jobs[index-1].id)}>↑</button><button type="button" className="button small" aria-label={`Move ${client.name} down`} disabled={index===jobs.length-1} onClick={()=>onMove(job.id,jobs[index+1].id)}>↓</button></div>
-    </div>;
-  })}</>;
+ const root=useRef<HTMLDivElement>(null),ghost=useRef<HTMLDivElement>(null),drag=useRef<Drag|null>(null),frame=useRef(0),settleAnimation=useRef<Animation|null>(null),previousRects=useRef(new Map<number,number>()),skipFlip=useRef(false);
+ const [lifted,setLifted]=useState<{id:number;rect:Rect}|null>(null),[over,setOver]=useState<number|null>(null),[announcement,setAnnouncement]=useState('');
+ function clear(){cancelAnimationFrame(frame.current);if(drag.current?.timer)clearTimeout(drag.current.timer);settleAnimation.current?.cancel();settleAnimation.current=null;drag.current=null;root.current?.querySelectorAll<HTMLElement>('[data-route-id]').forEach(row=>{row.style.transform='';});setLifted(null);setOver(null);}
+ useEffect(()=>()=>{cancelAnimationFrame(frame.current);if(drag.current?.timer)clearTimeout(drag.current.timer);settleAnimation.current?.cancel();drag.current=null;},[]);
+ useLayoutEffect(()=>{const next=new Map<number,number>();root.current?.querySelectorAll<HTMLElement>('[data-route-id]').forEach(row=>{const id=Number(row.dataset.routeId),top=row.getBoundingClientRect().top;next.set(id,top);const previous=previousRects.current.get(id);if(!skipFlip.current&&previous!==undefined&&previous!==top&&!reduced())row.animate([{transform:`translateY(${previous-top}px)`},{transform:'translateY(0)'}],{duration:220,easing:'cubic-bezier(.22,1,.36,1)'});});previousRects.current=next;skipFlip.current=false;},[jobs]);
+ function tick(){const current=drag.current;if(!current||!current.active||current.settling)return;const edge=72;const scroll=current.py<edge?-Math.min(9,(edge-current.py)/6):current.py>window.innerHeight-edge?Math.min(9,(current.py-window.innerHeight+edge)/6):0;if(scroll)window.scrollBy(0,scroll);
+ const delta=window.scrollY-current.scroll;let nearest=current.id,distance=Infinity;current.rects.forEach((rect,id)=>{const difference=Math.abs(current.py-(rect.top-delta+rect.height/2));if(difference<distance){distance=difference;nearest=id;}});if(current.over!==nearest){current.over=nearest;setOver(nearest);}
+ if(ghost.current)ghost.current.style.transform=`translate3d(${current.px-current.x}px,${current.py-current.y}px,0) scale(${reduced()?1:1.025})`;
+ const from=jobs.findIndex(job=>job.id===current.id),to=jobs.findIndex(job=>job.id===current.over),height=(current.rects.get(current.id)?.height||0)+9;
+ root.current?.querySelectorAll<HTMLElement>('[data-route-id]').forEach(row=>{const index=jobs.findIndex(job=>job.id===Number(row.dataset.routeId));const offset=index>from&&index<=to?-height:index<from&&index>=to?height:0;row.style.transform=offset?`translate3d(0,${offset}px,0)`:'';});frame.current=requestAnimationFrame(tick);
+ }
+ useLayoutEffect(()=>{if(lifted){cancelAnimationFrame(frame.current);frame.current=requestAnimationFrame(tick);}},[lifted]);
+ function start(event:PointerEvent<HTMLButtonElement>,id:number){if(!event.isPrimary||event.button!==0||drag.current?.settling)return;clear();const current:Drag={id,pointerId:event.pointerId,x:event.clientX,y:event.clientY,px:event.clientX,py:event.clientY,active:false,over:id,scroll:window.scrollY,rects:new Map(),timer:null,settling:false};drag.current=current;event.currentTarget.setPointerCapture(event.pointerId);current.timer=setTimeout(()=>{if(drag.current!==current)return;root.current?.querySelectorAll<HTMLElement>('[data-route-id]').forEach(row=>current.rects.set(Number(row.dataset.routeId),row.getBoundingClientRect()));const rect=current.rects.get(id);if(!rect)return;current.active=true;setLifted({id,rect});setOver(id);setAnnouncement('Job lifted. Drag to the new position, then release.');},400);}
+ function move(event:PointerEvent<HTMLButtonElement>){const current=drag.current;if(!current||current.pointerId!==event.pointerId||current.settling)return;current.px=event.clientX;current.py=event.clientY;if(!current.active&&Math.hypot(current.px-current.x,current.py-current.y)>12){clear();return;}if(current.active)event.preventDefault();}
+ async function settle(commit:boolean){const current=drag.current;if(!current||current.settling)return;if(!current.active){clear();return;}current.settling=true;cancelAnimationFrame(frame.current);const id=current.id,target=commit?current.over:id;const source=current.rects.get(id)!,destination=current.rects.get(target)!;const from=jobs.findIndex(job=>job.id===id),to=jobs.findIndex(job=>job.id===target);const top=destination.top-(window.scrollY-current.scroll)+(to>from?destination.height-source.height:0);
+ if(!commit)root.current?.querySelectorAll<HTMLElement>('[data-route-id]').forEach(row=>{row.style.transform='';});
+ if(ghost.current){const animation=ghost.current.animate([{transform:ghost.current.style.transform},{transform:`translate3d(0,${top-source.top}px,0) scale(1)`}],{duration:reduced()?0:200,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});settleAnimation.current=animation;try{await animation.finished;}catch{return;}}
+ if(drag.current!==current)return;if(commit&&id!==target){skipFlip.current=true;root.current?.querySelectorAll<HTMLElement>('[data-route-id]').forEach(row=>{row.style.transition='none';row.style.transform='';requestAnimationFrame(()=>{row.style.transition='';});});onMove(id,target);setAnnouncement('Route order updated.');}clear();
+ }
+ const floating=lifted?clients.find(client=>client.id===jobs.find(job=>job.id===lifted.id)?.clientId):null;
+ return <div ref={root}><p id="route-drag-help" className="muted small">Hold the grip, then drag the lifted job. Arrows are available too.</p><span className="sr-only" role="status">{announcement}</span>{jobs.map((job,index)=>{const client=clients.find(c=>c.id===job.clientId)!;return <div key={job.id} data-route-id={job.id} className={`card row route-row${lifted?.id===job.id?' route-source':''}${over===job.id&&lifted?.id!==job.id?' route-drop':''}`}>
+ <button type="button" className="icon-button route-grip" aria-label={`Hold to move ${client.name}`} aria-describedby="route-drag-help" aria-pressed={lifted?.id===job.id} onContextMenu={event=>event.preventDefault()} onPointerDown={event=>start(event,job.id)} onPointerMove={move} onPointerUp={()=>{void settle(true);}} onPointerCancel={()=>{void settle(false);}} onLostPointerCapture={()=>{if(drag.current&&!drag.current.settling)void settle(false);}} onKeyDown={event=>{if(drag.current)return;if(event.key==='ArrowUp'&&index>0){event.preventDefault();onMove(job.id,jobs[index-1].id);}if(event.key==='ArrowDown'&&index<jobs.length-1){event.preventDefault();onMove(job.id,jobs[index+1].id);}}}><span aria-hidden="true">⠿</span></button>
+ <b>{index+1}</b><div className="jobmain"><b>{client.name}</b><div className="muted tiny">{client.suburb}</div></div><div className="route-arrows"><button type="button" className="button small" aria-label={`Move ${client.name} up`} disabled={index===0||!!lifted} onClick={()=>onMove(job.id,jobs[index-1].id)}>↑</button><button type="button" className="button small" aria-label={`Move ${client.name} down`} disabled={index===jobs.length-1||!!lifted} onClick={()=>onMove(job.id,jobs[index+1].id)}>↓</button></div></div>;})}
+ {lifted&&floating&&createPortal(<div ref={ghost} className="card row route-floating" aria-hidden="true" style={{position:'fixed',top:lifted.rect.top,left:lifted.rect.left,width:lifted.rect.width,height:lifted.rect.height}}><span className="icon-button route-grip">⠿</span><b>{jobs.findIndex(job=>job.id===lifted.id)+1}</b><div className="jobmain"><b>{floating.name}</b><div className="muted tiny">{floating.suburb}</div></div><div className="route-arrows"><span className="button small">↑</span><span className="button small">↓</span></div></div>,document.body)}
+ </div>;
 }
