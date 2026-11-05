@@ -6,9 +6,11 @@ Only explicitly approved Ready entries may be implemented. Record approval sourc
 None.
 
 ## In progress
-- MOBILE-01A: Owner approved option 2 in chat on 2026-11-05, after option 1. Started only after TEST-02B passed. Scope: one narrow-phone viewport review of compact client card, Call/Navigate targets and service navigation; isolated synthetic data, screenshot and three useful improvements. No runtime fixes, redesign or installs. Acceptance: exercised behavior, findings and limitations recorded before any publication.
+None.
 
 ## Awaiting review
+- MOBILE-01A: Owner-selected step 2 completed after TEST-02B passed. Isolated Chrome 320x568 review exercised client editing/reload, correct Call/Maps link targets and service/bottom navigation with synthetic data. No overflow or console errors in exercised screens. Three usability proposals recorded in the 2026-11-05-1214 report; no fixes or redesign. Awaiting owner acceptance of findings.
+
 - TEST-02B: Owner explicitly selected option 1 on 2026-11-05. Added three synthetic tests for saved notes plus trimmed draft, blank draft handling, and original invoice/completion time preserved after save/reload and repeated checkout. Tests 16/16 and build passed on Node 24. Initial sandbox EPERM resolved by identical build with approved filesystem access; no runtime change or risky fix. User requested checks before live publication; no publish yet.
 
 None.
@@ -48,3 +50,11 @@ Report date: 2026-11-05. Owner selected options 1 and 2 early in chat, in that o
 3. **A useful service report** — Clarify what a customer summary could include. First step: inspect existing photos/readings/notes and propose one report layout; no implementation or delivery.
 
 Which direction would you like: 1, 2 or 3?
+## Next choices for Friday 6 November 2026 — report 2026-11-05 12:14
+Owner selected earlier options 1 and 2 in chat for immediate sequential work; both scopes are complete and checked. These replacement options remain proposals, not Ready. No selection yet.
+
+1. **Name the Back button (recommended)** — Help screen-reader users leave client editing. First step: add an accessible name to the existing profile Back button only, preserving its design/action; verify name/navigation in phone browser, then tests/build.
+2. **Easier chemical button taps** — Make the smaller chemical action easier to touch. First step: increase only the Add / adjust chemicals hit area to at least 44px high without changing label/action; check 320px fit, then tests/build.
+3. **Easier pool-detail taps** — Make pool details easier to expand. First step: increase only the Pool details & visit history summary hit area to at least 44px high; verify expand/collapse at 320px, then tests/build.
+
+Which direction would you like: 1, 2 or 3? Selection approves only the stated first step, not release.
